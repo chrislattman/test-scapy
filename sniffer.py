@@ -3,7 +3,7 @@ import logging
 # Turns off scapy warnings for macOS (need this before any scapy imports)
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
-# If we wanted to be specific with our imports:
+# If we wanted to be specific with our scapy imports:
 # from scapy.sendrecv import sniff
 # from scapy.layers.inet import TCP
 # from scapy.packet import Raw
