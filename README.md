@@ -16,3 +16,9 @@ python3 sniffer.py
 ```
 
 Visit http://127.0.0.1:5000 on a web browser, and enter any login credentials (it doesn't matter what they are). Once you hit "Submit", you will be shown a success page. Check the second terminal and you should see the credentials you just entered.
+
+If you want to see what encrypted data looks like, add `encrypt` as an argument to both python3 commands, and run them again, e.g.
+
+```
+python3 app.py encrypt
+```
