@@ -7,18 +7,25 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # from scapy.sendrecv import sniff
 # from scapy.layers.inet import TCP
 # from scapy.packet import Raw
+# from scapy.interfaces import get_working_ifaces
 from scapy.all import *
 from parse import parse
 
 def sniff_packet(encrypted: bool):
     if not encrypted:
+        # This gets the OS-specific name of the loopback interface (localhost)
+        ifaces = get_working_ifaces()
+        for iface in ifaces:
+            if iface.ip == "127.0.0.1":
+                loopback_iface = iface.name
+                break
         # This filters for TCP segments with a destination port of 5000
         # that include the word "POST" in their decoded data section (aka payload)
         #
         # We are only looking for one packet: the username and password submission,
         # which will be found in an HTTP POST request
         lfilter = lambda p: TCP in p and Raw in p and p[TCP].dport == 5000 and "POST" in p[Raw].load.decode()
-        pcap = sniff(iface="lo0", lfilter=lfilter, count=1)
+        pcap = sniff(iface=loopback_iface, lfilter=lfilter, count=1)
         request_str = pcap[0][Raw].load.decode()
 
         # The username and password are in the last line of the HTTP request
