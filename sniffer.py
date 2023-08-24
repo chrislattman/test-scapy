@@ -11,12 +11,12 @@ from scapy.all import *
 from parse import parse
 
 def sniff_packet(encrypted: bool):
-    # This filters for TCP segments with a destination port of 5000
-    # that include the word "POST" in their decoded data section (aka payload)
-    #
-    # We are only looking for one packet: the username and password submission,
-    # which will be found in an HTTP POST request
     if not encrypted:
+        # This filters for TCP segments with a destination port of 5000
+        # that include the word "POST" in their decoded data section (aka payload)
+        #
+        # We are only looking for one packet: the username and password submission,
+        # which will be found in an HTTP POST request
         lfilter = lambda p: TCP in p and Raw in p and p[TCP].dport == 5000 and "POST" in p[Raw].load.decode()
         pcap = sniff(iface="lo0", lfilter=lfilter, count=1)
         request_str = pcap[0][Raw].load.decode()
