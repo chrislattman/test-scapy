@@ -18,6 +18,7 @@ def sniff_packet(encrypted: bool):
         if iface.ip == "127.0.0.1":
             loopback_iface = iface.name
             break
+
     if not encrypted:
         # This filters for TCP segments with a destination port of 5000
         # that include the word "POST" in their decoded data section (aka payload)
