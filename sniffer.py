@@ -1,14 +1,10 @@
 import logging
+import sys
 
 # Turns off scapy warnings for macOS (need this before any scapy imports)
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
-# If we wanted to be specific with our scapy imports:
-# from scapy.sendrecv import sniff
-# from scapy.layers.inet import TCP
-# from scapy.packet import Raw
-# from scapy.interfaces import get_working_ifaces
-from scapy.all import *
+from scapy.all import sniff, TCP, Raw, get_working_ifaces
 from parse import parse
 
 def sniff_packet(encrypted: bool):
