@@ -24,6 +24,7 @@ def sniff_packet(encrypted: bool):
         lfilter = lambda p: TCP in p and Raw in p and p[TCP].dport == 5000 and "POST" in p[Raw].load.decode()
         pcap = sniff(iface=loopback_iface, lfilter=lfilter, count=1)
         request_str = pcap[0][Raw].load.decode()
+        # print(request_str)
 
         # The username and password are in the last line of the HTTP request
         # (the rest is the HTTP request line and headers)

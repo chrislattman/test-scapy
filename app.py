@@ -10,6 +10,9 @@ def index():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
+        # print(username)
+        # print(password)
+        # request.files.get("filename").save("captured_file")
 
         if not username or not password:
             return render_template("error.html")
