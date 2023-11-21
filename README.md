@@ -32,3 +32,11 @@ python3 sniffer.py encrypt
 ```
 
 - The Linux note applies here as well
+
+If you want to test viewing decrypted HTTPS traffic, install [`mitmproxy`](https://mitmproxy.org/) on your computer or some other server.
+
+- mitmproxy works by routing all HTTP/S (and WebSocket) traffic through a proxy that you control
+- This means any TLS handshake normally done between your device and a website is split up between your device and the mitmproxy server, and the mitmproxy server and the website (hence the mitm- prefix, meaning "man-in-the-middle")
+- It gives you the ability to see decrypted HTTPS traffic in `tcpdump`-like fashion with `mitmdump` or on a webpage with `mitmweb`
+- In order for this to work, you may need to install mitmproxy's valid CA (root) certificate on your device
+- While mitmproxy is a handy tool, it's defeated by client certificate pinning, where the server expects a certain certificate from the client (this is rare)
