@@ -1,9 +1,12 @@
 {% extends "layout.html" %}
 {% block body %}
-        Success!
+        Welcome{{ existing }}, {{ user }}!
         <div class="section">
             <a href="/">
                 <button>Back Home</button>
-             </a>
+            </a>
+            <a href="/logout">
+                <button>Log out</button>
+            </a>
         </div>
 {% endblock %}

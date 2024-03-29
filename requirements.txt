@@ -1,4 +1,5 @@
-flask==2.3.3
+Flask==3.0.2
 scapy==2.5.0
-parse==1.19.1
-pyopenssl==23.2.0
+parse==1.20.1
+pyOpenSSL==24.1.0
+pyJWT==2.8.0
