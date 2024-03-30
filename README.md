@@ -2,7 +2,7 @@
 
 This is an example of how to extract login credentials from an HTTP POST request over an insecure connection. If using HTTPS, this would not work since payloads are encrypted with TLS. (This is a reminder to always use HTTPS when sending data over the Internet!)
 
-This example also shows how JWT works. If a token is sent with a GET request (in the form of a cookie called "auth_token"), login will be approved without the need for entering a username and password. Click on the "Log out" button to expire the cookie.
+This example also shows how JWT works. If a token is sent with a GET request (in the form of a HTTP cookie called "auth_token"), login will be approved without the need for entering a username and password. Click on the "Log out" button to expire the cookie.
 
 Test this by running
 

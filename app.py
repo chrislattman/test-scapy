@@ -30,7 +30,7 @@ def index():
         # print(password)
         # request.files.get("filename").save("captured_file")
 
-        if username not in logins:
+        if username not in logins and username is not None and password is not None:
             logins[username] = password
             resp = make_response(render_template("success.html", user=username, existing=""))
             resp.set_cookie("auth_token", create_cookie(username, password), max_age=86400, httponly=True, samesite="Lax")
@@ -43,18 +43,22 @@ def index():
             return make_response(render_template("error.html"), 403)
 
     # request.method == "GET"
-    jwt_cookie = request.cookies.get("auth_token")
-    if jwt_cookie is not None:
-        decoded_token = jwt.decode(jwt_cookie, options={"verify_signature": False})
-        iat = int(decoded_token["iat"])
-        exp = int(decoded_token["exp"])
-        current_time = int(time())
-        if iat < current_time and exp > current_time:
-            sub = decoded_token["sub"]
-            if sub in logins:
-                key = logins[sub]
-                jwt.decode(jwt_cookie, key, ["HS256"])
-                return render_template("success.html", user=sub, existing=" back")
+    token = request.cookies.get("auth_token")
+    try:
+        if token is not None:
+            decoded_token = jwt.decode(token, options={"verify_signature": False})
+            iat = int(decoded_token["iat"])
+            exp = int(decoded_token["exp"])
+            current_time = int(time())
+            if current_time > iat and current_time < exp:
+                sub = decoded_token["sub"]
+                if sub in logins:
+                    key = logins[sub]
+                    jwt.decode(token, key, ["HS256"])
+                    return render_template("success.html", user=sub, existing=" back")
+    except:
+        return render_template("index.html")
+    # The line below gets called if no exceptions are thrown but the token is invalid or not present
     return render_template("index.html")
 
 
