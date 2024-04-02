@@ -3,3 +3,4 @@ scapy==2.5.0
 parse==1.20.1
 pyOpenSSL==24.1.0
 pyJWT==2.8.0
+bcrypt==4.1.2
