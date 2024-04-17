@@ -1,9 +1,10 @@
 import sys
 from time import time
-from flask import Flask, make_response, render_template, request
+
+import bcrypt
 # from werkzeug.datastructures.auth import WWWAuthenticate
 import jwt
-import bcrypt
+from flask import Flask, make_response, render_template, request
 
 app = Flask(__name__)
 
@@ -38,9 +39,17 @@ def index():
                 hashed_password = bcrypt.hashpw(password.encode(), salt)
                 key = salt + hashed_password
                 logins[username] = key
-                resp = make_response(render_template("success.html", user=username, existing=""))
+                resp = make_response(
+                    render_template("success.html", user=username, existing="")
+                )
                 # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie
-                resp.set_cookie("auth_token", create_cookie(username, key), max_age=86400, httponly=True, samesite="Lax")
+                resp.set_cookie(
+                    "auth_token",
+                    create_cookie(username, key),
+                    max_age=86400,
+                    httponly=True,
+                    samesite="Lax",
+                )
                 return resp
             else:
                 key = logins[username]
@@ -48,8 +57,16 @@ def index():
                 hashed_password = key[29:]
                 hashed_provided_password = bcrypt.hashpw(password.encode(), salt)
                 if hashed_password == hashed_provided_password:
-                    resp = make_response(render_template("success.html", user=username, existing=" back"))
-                    resp.set_cookie("auth_token", create_cookie(username, key), max_age=86400, httponly=True, samesite="Lax")
+                    resp = make_response(
+                        render_template("success.html", user=username, existing=" back")
+                    )
+                    resp.set_cookie(
+                        "auth_token",
+                        create_cookie(username, key),
+                        max_age=86400,
+                        httponly=True,
+                        samesite="Lax",
+                    )
                     return resp
         return make_response(render_template("error.html"), 403)
 

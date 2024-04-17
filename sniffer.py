@@ -4,8 +4,9 @@ import sys
 # Turns off scapy warnings for macOS (need this before any scapy imports)
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
-from scapy.all import sniff, TCP, Raw, get_working_ifaces
 from parse import parse
+from scapy.all import TCP, Raw, get_working_ifaces, sniff
+
 
 def sniff_packet(encrypted: bool):
     # This gets the OS-specific name of the loopback interface (localhost)
@@ -21,7 +22,12 @@ def sniff_packet(encrypted: bool):
         #
         # We are only looking for one packet: the username and password submission,
         # which will be found in an HTTP POST request
-        lfilter = lambda p: TCP in p and Raw in p and p[TCP].dport == 5000 and "POST" in p[Raw].load.decode()
+        lfilter = (
+            lambda p: TCP in p
+            and Raw in p
+            and p[TCP].dport == 5000
+            and "POST" in p[Raw].load.decode()
+        )
         pcap = sniff(iface=loopback_iface, lfilter=lfilter, count=1)
         request_str = pcap[0][Raw].load.decode()
         # print(request_str)
@@ -45,6 +51,7 @@ def sniff_packet(encrypted: bool):
         pcap = sniff(iface=loopback_iface, lfilter=lfilter, count=1)
         request = pcap[0][Raw].load
         print(request)
+
 
 if __name__ == "__main__":
     if len(sys.argv) == 2 and "encrypt" in sys.argv[1]:
