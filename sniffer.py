@@ -33,7 +33,9 @@ def sniff_packet(encrypted: bool):
     if not encrypted:
         # This filters for TCP segments with a destination port of 5000. We are
         # only looking for one packet: the username and password submission,
-        # which will be found in an HTTP POST request.
+        # which will be found in an HTTP POST request. Unless, of course, we
+        # are using Safari, which for some unknown reason, sends 2 packets for
+        # a simple POST request, even without a file upload.
         #
         # If file uploading is enabled, we want to capture the first 2 packets,
         # since multipart/form-data sometimes sends the form arguments after the
@@ -49,10 +51,11 @@ def sniff_packet(encrypted: bool):
                     second_payload = pcap[2][Raw].load
                 else:
                     second_payload = pcap[1][Raw].load
-                # Following this header is 2 newlines followed by the beginning
-                # of the uploaded file. This is where you'd extract the file,
-                # assuming you have all of the packets up to the HTTP 200 response
-                # sent by the server.
+
+                # Following this Content-Type header is 2 newlines followed by
+                # the beginning of the uploaded file. This is where you'd extract
+                # the file, assuming you have all of the packets up to the HTTP
+                # 200 response sent by the server.
                 #
                 # It is the second overall Content-Type header, the first being
                 # Content-Type: multipart/form-data
@@ -65,22 +68,35 @@ def sniff_packet(encrypted: bool):
                 first_index = payload.index(b"Content-Type")
                 first_index += len("Content-Type: multipart/form-data")
                 index = payload[first_index:].index(b"Content-Type")
-                payload = payload[:first_index + index]
+                payload = payload[: first_index + index]
             request_str = payload.decode()
-            boundary, = search("Content-Type: multipart/form-data; boundary={}\n", request_str)
-            username, = search('Content-Disposition: form-data; name="username"{}--' + boundary, request_str)
-            password, = search('Content-Disposition: form-data; name="password"{}--' + boundary, request_str)
+            (boundary,) = search(
+                "Content-Type: multipart/form-data; boundary={}\n", request_str
+            )
+            (username,) = search(
+                'Content-Disposition: form-data; name="username"{}--' + boundary,
+                request_str,
+            )
+            (password,) = search(
+                'Content-Disposition: form-data; name="password"{}--' + boundary,
+                request_str,
+            )
             print(f"username = {username.strip()}")
             print(f"password = {password.strip()}")
         else:
             request_str = pcap[0][Raw].load.decode()
-            # The username and password are in the last line of the HTTP request
+
+            # Since the Content-Type is application/x-www-form-urlencoded, the
+            # username and password are in the last line of the HTTP request
             # (the rest is the HTTP request line and headers)
             body = request_str.split("\n")[-1]
 
             # We know that the username and password fields have the HTML input names
             # of "username" and "password", but we could confirm this by inspecting the
             # HTML source of the home page
+            #
+            # This will not capture Safari form data properly, since it's sent
+            # in a second packet.
             login = parse("username={}&password={}", body)
             print(f"username = {login[0]}")
             print(f"password = {login[1]}")

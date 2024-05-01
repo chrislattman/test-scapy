@@ -1,11 +1,14 @@
+import mimetypes
 import os
 import sys
 from time import time
 
 import bcrypt
-# from werkzeug.datastructures.auth import WWWAuthenticate
 import jwt
+import magic
 from flask import Flask, make_response, render_template, request
+
+# from werkzeug.datastructures.auth import WWWAuthenticate
 
 app = Flask(__name__)
 
@@ -36,7 +39,12 @@ def index():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
-        # request.files.get("filename").save("captured_file")
+        if file_upload:
+            request.files.get("filename").save("uploaded_file")
+            mime = magic.from_file("uploaded_file", mime=True)
+            extenstion = mimetypes.guess_extension(mime)
+            if extenstion:
+                os.rename("uploaded_file", "uploaded_file" + extenstion)
 
         if username is not None and password is not None:
             if username not in logins:
@@ -107,7 +115,7 @@ def index():
 @app.route("/logout", methods=["GET"])
 def logout():
     resp = make_response(render_template("index.html", file_upload=file_upload))
-    resp.delete_cookie("auth_token") # same as resp.set_cookie("auth_token", max_age=0)
+    resp.delete_cookie("auth_token")  # same as resp.set_cookie("auth_token", max_age=0)
     return resp
 
 
