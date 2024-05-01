@@ -42,6 +42,11 @@ def sniff_packet(encrypted: bool):
         # packet with the HTTP POST request line. However, on Linux, packets on
         # localhost are duplicated, so we end up needing to capture 4 packets,
         # disregarding the 2nd and 4th packets.
+        #
+        # The destination host, which should be localhost, can be identified
+        # with p[IP].dst (source host is p[IP].src). You can inspect the TCP
+        # flags in p[TCP].flags which are bitwise ORed with each other, e.g.
+        # p[TCP].flags & 0x08 equals 1 if the TCP PSH flag is set.
         lfilter = lambda p: TCP in p and Raw in p and p[TCP].dport == 5000
         pcap = sniff(iface=loopback_iface, lfilter=lfilter, count=count)
         if file_upload:
