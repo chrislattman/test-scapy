@@ -1,3 +1,4 @@
+import os
 import sys
 from time import time
 
@@ -11,6 +12,12 @@ app = Flask(__name__)
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 logins = {}
+
+var = os.getenv("FILE_UPLOAD")
+if var and var == "1":
+    file_upload = True
+else:
+    file_upload = False
 
 
 def create_cookie(username: str, key: bytes) -> str:
@@ -29,8 +36,6 @@ def index():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
-        # print(username)
-        # print(password)
         # request.files.get("filename").save("captured_file")
 
         if username is not None and password is not None:
@@ -94,16 +99,15 @@ def index():
                     jwt.decode(token, key, ["HS256"])
                     return render_template("success.html", user=sub, existing=" back")
     except:
-        return render_template("index.html")
+        return render_template("index.html", file_upload=file_upload)
     # The line below gets called if no exceptions are thrown but the token is invalid or not present
-    return render_template("index.html")
+    return render_template("index.html", file_upload=file_upload)
 
 
 @app.route("/logout", methods=["GET"])
 def logout():
-    resp = make_response(render_template("index.html"))
-    # resp.set_cookie("auth_token", max_age=0)
-    resp.delete_cookie("auth_token")
+    resp = make_response(render_template("index.html", file_upload=file_upload))
+    resp.delete_cookie("auth_token") # same as resp.set_cookie("auth_token", max_age=0)
     return resp
 
 

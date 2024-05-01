@@ -5,11 +5,16 @@
         </div>
         <div class="container">
             <div class="section">
+            {% if file_upload %}
+                <form action="/" method="post" enctype="multipart/form-data">
+            {% else %}
                 <form action="/" method="post">
-                <!-- <form action="/" method="post" enctype="multipart/form-data"> -->
+            {% endif %}
                     <input autocomplete="off" autofocus required name="username" placeholder="Username" type="text">
                     <input autocomplete="off" required name="password" placeholder="Password" type="password">
-                    <!-- <input required name="filename" type="file"> -->
+                {% if file_upload %}
+                    <input required name="filename" type="file">
+                {% endif %}
                     <input type="submit" value="Submit">
                 </form>
             </div>
