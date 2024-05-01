@@ -23,44 +23,32 @@ def sniff_packet(encrypted: bool):
             loopback_iface = iface.name
             break
 
-    if file_upload:
+    if file_upload and sys.platform == "linux":
         count = 4
+    elif file_upload:
+        count = 2
     else:
         count = 1
 
     if not encrypted:
-        # This filters for TCP segments with a destination port of 5000
-        # that include the word "POST" in their decoded data section (aka payload)
-        #
-        # We are only looking for one packet: the username and password submission,
+        # This filters for TCP segments with a destination port of 5000. We are
+        # only looking for one packet: the username and password submission,
         # which will be found in an HTTP POST request.
         #
         # If file uploading is enabled, we want to capture the first 2 packets,
         # since multipart/form-data sometimes sends the form arguments after the
-        # packet with the HTTP POST request line. However, packets on localhost are
-        # duplicated, so we end up needing to capture 4 packets, discarding the 2nd
-        # and 4th packets (unless on macOS).
-        if file_upload:
-            lfilter = (
-                lambda p: TCP in p
-                and Raw in p
-                and p[TCP].dport == 5000
-            )
-        else:
-            lfilter = (
-                lambda p: TCP in p
-                and Raw in p
-                and p[TCP].dport == 5000
-                and "POST" in p[Raw].load.decode()
-            )
+        # packet with the HTTP POST request line. However, on Linux, packets on
+        # localhost are duplicated, so we end up needing to capture 4 packets,
+        # disregarding the 2nd and 4th packets.
+        lfilter = lambda p: TCP in p and Raw in p and p[TCP].dport == 5000
         pcap = sniff(iface=loopback_iface, lfilter=lfilter, count=count)
         if file_upload:
             payload = pcap[0][Raw].load
             if b"Content-Disposition" not in payload:
-                if sys.platform == "darwin":
-                    second_payload = pcap[1][Raw].load
-                else:
+                if sys.platform == "linux":
                     second_payload = pcap[2][Raw].load
+                else:
+                    second_payload = pcap[1][Raw].load
                 # Following this header is 2 newlines followed by the beginning
                 # of the uploaded file. This is where you'd extract the file,
                 # assuming you have all of the packets up to the HTTP 200 response
