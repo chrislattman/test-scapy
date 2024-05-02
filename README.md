@@ -2,7 +2,7 @@
 
 This is an example of how to extract login credentials from an HTTP POST request over an insecure connection. If using HTTPS, this would not work since payloads are encrypted with TLS. (This is a reminder to always use HTTPS when sending data over the Internet!)
 
-This example also shows how JWT works. If a token is sent with a GET request (in the form of a HTTP cookie called "auth_token"), login will be approved without the need for entering a username and password. Click on the "Log out" button to expire the cookie.
+This example also shows how [JWT](https://jwt.io/introduction) works. If a token is sent with a GET request (in the form of a HTTP cookie called "auth_token"), login will be approved without the need for entering a username and password. Click on the "Log out" button to expire the cookie.
 
 Test this by running
 
@@ -17,7 +17,8 @@ Then in a second terminal, run
 python3 sniffer.py
 ```
 
-- Note: on Linux, you will have to run `sudo -E python3 sniffer.py`
+- On Linux, you will have to run `sudo -E python3 sniffer.py`
+- Note: `sniffer.py` uses the [Scapy](https://scapy.readthedocs.io/en/latest/usage.html) package, which under the hood uses [libpcap](https://en.wikipedia.org/wiki/Pcap) on Unix-like systems and Npcap on Windows
 - Set the environment variable `FILE_UPLOAD=1` if you want to enable file uploading on the website
     - However, Scapy wasn't designed to perform logic on packets while actively capturing them (Python is already slow)
     - You would need to capture an arbitrary amount of packets beforehand, then read them to construct the file that was uploaded
