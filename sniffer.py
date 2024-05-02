@@ -60,7 +60,9 @@ def sniff_packet(encrypted: bool):
                 # Following this Content-Type header is 2 newlines followed by
                 # the beginning of the uploaded file. This is where you'd extract
                 # the file, assuming you have all of the packets up to the HTTP
-                # 200 response sent by the server.
+                # 200 response sent by the server. In the case of a file download,
+                # after the last header followed by a newline is where the file
+                # data starts.
                 #
                 # It is the second overall Content-Type header, the first being
                 # Content-Type: multipart/form-data
@@ -68,8 +70,8 @@ def sniff_packet(encrypted: bool):
                 payload += second_payload[:index]
             else:
                 # Since there are two Content-Type headers present, we need to
-                # find the index of the first match, then look for the second match
-                # in the substring following the first match
+                # find the index of the first match, then look for the second
+                # match in the substring following the first match.
                 first_index = payload.index(b"Content-Type")
                 first_index += len("Content-Type: multipart/form-data")
                 index = payload[first_index:].index(b"Content-Type")
@@ -93,12 +95,12 @@ def sniff_packet(encrypted: bool):
 
             # Since the Content-Type is application/x-www-form-urlencoded, the
             # username and password are in the last line of the HTTP request
-            # (the rest is the HTTP request line and headers)
+            # (the rest is the HTTP request line, headers, and a newline).
             body = request_str.split("\n")[-1]
 
-            # We know that the username and password fields have the HTML input names
-            # of "username" and "password", but we could confirm this by inspecting the
-            # HTML source of the home page
+            # We know that the username and password fields have the HTML input
+            # names of "username" and "password", but we could confirm this by
+            # inspecting the HTML source of the home page.
             #
             # This will not capture Safari form data properly, since it's sent
             # in a second packet.
@@ -107,9 +109,9 @@ def sniff_packet(encrypted: bool):
             print(f"password = {login[1]}")
     else:
         # If HTTPS is used, the entire HTTP request is encrypted with TLS, so you
-        # will not be able to parse anything
+        # will not be able to parse anything.
         #
-        # The request (in raw bytes) is printed out for demonstration
+        # The request (in raw bytes) is printed out for demonstration.
         lfilter = lambda p: TCP in p and Raw in p and p[TCP].dport == 5000
         pcap = sniff(iface=loopback_iface, lfilter=lfilter, count=count)
         request = pcap[0][Raw].load

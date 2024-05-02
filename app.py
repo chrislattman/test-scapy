@@ -119,6 +119,16 @@ def logout():
     return resp
 
 
+@app.route("/testjson", methods=["POST"])
+def testjson():
+    data = request.json
+    expected = {"x": 5, "y": 6}
+    if sorted(data.items()) == sorted(expected.items()):
+        return "JSON validated!"
+    else:
+        return "JSON not validated."
+
+
 if __name__ == "__main__":
     if len(sys.argv) == 2 and "encrypt" in sys.argv[1]:
         app.run(host="127.0.0.1", port=5000, ssl_context="adhoc")
