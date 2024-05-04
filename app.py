@@ -17,7 +17,7 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 logins = {}
 
 var = os.getenv("FILE_UPLOAD")
-if var and var == "1":
+if var is not None and var == "1":
     file_upload = True
 else:
     file_upload = False

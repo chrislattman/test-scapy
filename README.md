@@ -18,7 +18,7 @@ python3 sniffer.py
 ```
 
 - On Linux, you will have to run `sudo -E python3 sniffer.py`
-- Note: `sniffer.py` uses the [Scapy](https://scapy.readthedocs.io/en/latest/usage.html) package, which under the hood uses [libpcap](https://en.wikipedia.org/wiki/Pcap) on Unix-like systems and Npcap on Windows
+- Note: `sniffer.py` uses the [Scapy](https://scapy.readthedocs.io/en/latest/usage.html) package, which under the hood uses [libpcap](https://en.wikipedia.org/wiki/Pcap) on Unix-like systems and Npcap on Windows (both libraries share the same API)
 - Set the environment variable `FILE_UPLOAD=1` if you want to enable file uploading on the website
     - However, Scapy wasn't designed to perform logic on packets while actively capturing them (Python is already slow)
     - You would need to capture an arbitrary amount of packets beforehand, then read them to construct the file that was uploaded

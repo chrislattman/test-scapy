@@ -9,7 +9,7 @@ from parse import parse, search
 from scapy.all import TCP, Raw, get_working_ifaces, sniff
 
 var = os.getenv("FILE_UPLOAD")
-if var and var == "1":
+if var is not None and var == "1":
     file_upload = True
 else:
     file_upload = False
@@ -47,6 +47,10 @@ def sniff_packet(encrypted: bool):
         # with p[IP].dst (source host is p[IP].src). You can inspect the TCP
         # flags in p[TCP].flags which are bitwise ORed with each other, e.g.
         # p[TCP].flags & 0x08 equals 1 if the TCP PSH flag is set.
+        #
+        # Advanced: you can send raw IP packets or Ethernet frames with send()
+        # and sendp() respectively:
+        # https://scapy.readthedocs.io/en/latest/usage.html#sending-packets
         lfilter = lambda p: TCP in p and Raw in p and p[TCP].dport == 5000
         pcap = sniff(iface=loopback_iface, lfilter=lfilter, count=count)
         if file_upload:
