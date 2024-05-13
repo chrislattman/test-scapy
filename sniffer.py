@@ -8,14 +8,7 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 from parse import parse, search
 from scapy.all import TCP, Raw, get_working_ifaces, sniff
 
-var = os.getenv("FILE_UPLOAD")
-if var is not None and var == "1":
-    file_upload = True
-else:
-    file_upload = False
-
-
-def sniff_packet(encrypted: bool):
+def sniff_packets(encrypted: bool, file_upload: bool):
     # This gets the OS-specific name of the loopback interface (localhost)
     ifaces = get_working_ifaces()
     for iface in ifaces:
@@ -121,9 +114,14 @@ def sniff_packet(encrypted: bool):
         request = pcap[0][Raw].load
         print(request)
 
-
 if __name__ == "__main__":
-    if len(sys.argv) == 2 and "encrypt" in sys.argv[1]:
-        sniff_packet(True)
+    var = os.getenv("FILE_UPLOAD")
+    if var is not None and var == "1":
+        file_upload = True
     else:
-        sniff_packet(False)
+        file_upload = False
+
+    if len(sys.argv) == 2 and "encrypt" in sys.argv[1]:
+        sniff_packets(True, file_upload)
+    else:
+        sniff_packets(False, file_upload)
