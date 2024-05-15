@@ -13,12 +13,14 @@ decoded_packet: str
 encrypted: bool
 file_upload: bool
 
+
 def got_packet(packet) -> None:
     global packets, decoded_packet
     if encrypted or file_upload:
         packets.append(packet[Raw].load)
     else:
         decoded_packet = packet[Raw].load.decode()
+
 
 def sniff_packets() -> None:
     # This gets the OS-specific name of the loopback interface (localhost)
@@ -85,7 +87,7 @@ def sniff_packets() -> None:
                 first_index = payload.index(b"Content-Type")
                 first_index += len("Content-Type: multipart/form-data")
                 index = payload[first_index:].index(b"Content-Type")
-                request_str = payload[:first_index + index].decode()
+                request_str = payload[: first_index + index].decode()
             (boundary,) = search(
                 "Content-Type: multipart/form-data; boundary={}\n",
                 request_str,
@@ -126,6 +128,7 @@ def sniff_packets() -> None:
         #
         # The request (in raw bytes) is printed out for demonstration.
         print(packets[0].hex())
+
 
 if __name__ == "__main__":
     var = os.getenv("FILE_UPLOAD")
