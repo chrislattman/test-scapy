@@ -8,7 +8,19 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 from parse import parse, search
 from scapy.all import TCP, Raw, get_working_ifaces, sniff
 
-def sniff_packets(encrypted: bool, file_upload: bool):
+packets: list[bytes] = []
+decoded_packet: str
+encrypted: bool
+file_upload: bool
+
+def got_packet(packet) -> None:
+    global packets, decoded_packet
+    if encrypted or file_upload:
+        packets.append(packet[Raw].load)
+    else:
+        decoded_packet = packet[Raw].load.decode()
+
+def sniff_packets() -> None:
     # This gets the OS-specific name of the loopback interface (localhost)
     ifaces = get_working_ifaces()
     for iface in ifaces:
@@ -23,36 +35,36 @@ def sniff_packets(encrypted: bool, file_upload: bool):
     else:
         count = 1
 
+    # This filters for TCP segments with a destination port of 5000. We are
+    # only looking for one packet: the username and password submission,
+    # which will be found in an HTTP POST request. Unless, of course, we
+    # are using Safari, which for some unknown reason, sends 2 packets for
+    # a simple POST request, even without a file upload.
+    #
+    # The destination host, which should be localhost, can be identified
+    # with p[IP].dst (source host is p[IP].src). You can inspect the TCP
+    # flags in p[TCP].flags which are bitwise ORed with each other, e.g.
+    # p[TCP].flags & 0x08 equals 1 if the TCP PSH flag is set.
+    #
+    # Advanced: you can send raw IP packets or Ethernet frames with send()
+    # and sendp() respectively:
+    # https://scapy.readthedocs.io/en/latest/usage.html#sending-packets
+    lfilter = lambda p: TCP in p and p[TCP].dport == 5000 and Raw in p
+    sniff(iface=loopback_iface, lfilter=lfilter, prn=got_packet, count=count)
+
     if not encrypted:
-        # This filters for TCP segments with a destination port of 5000. We are
-        # only looking for one packet: the username and password submission,
-        # which will be found in an HTTP POST request. Unless, of course, we
-        # are using Safari, which for some unknown reason, sends 2 packets for
-        # a simple POST request, even without a file upload.
-        #
         # If file uploading is enabled, we want to capture the first 2 packets,
         # since multipart/form-data sometimes sends the form arguments after the
         # packet with the HTTP POST request line. However, on Linux, packets on
         # localhost are duplicated, so we end up needing to capture 4 packets,
         # disregarding the 2nd and 4th packets.
-        #
-        # The destination host, which should be localhost, can be identified
-        # with p[IP].dst (source host is p[IP].src). You can inspect the TCP
-        # flags in p[TCP].flags which are bitwise ORed with each other, e.g.
-        # p[TCP].flags & 0x08 equals 1 if the TCP PSH flag is set.
-        #
-        # Advanced: you can send raw IP packets or Ethernet frames with send()
-        # and sendp() respectively:
-        # https://scapy.readthedocs.io/en/latest/usage.html#sending-packets
-        lfilter = lambda p: TCP in p and Raw in p and p[TCP].dport == 5000
-        pcap = sniff(iface=loopback_iface, lfilter=lfilter, count=count)
         if file_upload:
-            payload = pcap[0][Raw].load
+            payload = packets[0]
             if b"Content-Disposition" not in payload:
                 if sys.platform == "linux":
-                    second_payload = pcap[2][Raw].load
+                    second_payload = packets[2]
                 else:
-                    second_payload = pcap[1][Raw].load
+                    second_payload = packets[1]
 
                 # Following this Content-Type header is 2 newlines followed by
                 # the beginning of the uploaded file. This is where you'd extract
@@ -65,6 +77,7 @@ def sniff_packets(encrypted: bool, file_upload: bool):
                 # Content-Type: multipart/form-data
                 index = second_payload.index(b"Content-Type")
                 payload += second_payload[:index]
+                request_str = payload.decode()
             else:
                 # Since there are two Content-Type headers present, we need to
                 # find the index of the first match, then look for the second
@@ -72,28 +85,31 @@ def sniff_packets(encrypted: bool, file_upload: bool):
                 first_index = payload.index(b"Content-Type")
                 first_index += len("Content-Type: multipart/form-data")
                 index = payload[first_index:].index(b"Content-Type")
-                payload = payload[: first_index + index]
-            request_str = payload.decode()
+                request_str = payload[:first_index + index].decode()
             (boundary,) = search(
-                "Content-Type: multipart/form-data; boundary={}\n", request_str
+                "Content-Type: multipart/form-data; boundary={}\n",
+                request_str,
+                case_sensitive=True,
             )
             (username,) = search(
                 'Content-Disposition: form-data; name="username"{}--' + boundary,
                 request_str,
+                case_sensitive=True,
             )
             (password,) = search(
                 'Content-Disposition: form-data; name="password"{}--' + boundary,
                 request_str,
+                case_sensitive=True,
             )
+            username = str(username)
+            password = str(password)
             print(f"username = {username.strip()}")
             print(f"password = {password.strip()}")
         else:
-            request_str = pcap[0][Raw].load.decode()
-
             # Since the Content-Type is application/x-www-form-urlencoded, the
             # username and password are in the last line of the HTTP request
             # (the rest is the HTTP request line, headers, and a newline).
-            body = request_str.split("\n")[-1]
+            body = decoded_packet.split("\n")[-1]
 
             # We know that the username and password fields have the HTML input
             # names of "username" and "password", but we could confirm this by
@@ -101,7 +117,7 @@ def sniff_packets(encrypted: bool, file_upload: bool):
             #
             # This will not capture Safari form data properly, since it's sent
             # in a second packet.
-            login = parse("username={}&password={}", body)
+            login = parse("username={}&password={}", body, case_sensitive=True)
             print(f"username = {login[0]}")
             print(f"password = {login[1]}")
     else:
@@ -109,10 +125,7 @@ def sniff_packets(encrypted: bool, file_upload: bool):
         # will not be able to parse anything.
         #
         # The request (in raw bytes) is printed out for demonstration.
-        lfilter = lambda p: TCP in p and Raw in p and p[TCP].dport == 5000
-        pcap = sniff(iface=loopback_iface, lfilter=lfilter, count=count)
-        request = pcap[0][Raw].load
-        print(request)
+        print(packets[0].hex())
 
 if __name__ == "__main__":
     var = os.getenv("FILE_UPLOAD")
@@ -122,6 +135,7 @@ if __name__ == "__main__":
         file_upload = False
 
     if len(sys.argv) == 2 and "encrypt" in sys.argv[1]:
-        sniff_packets(True, file_upload)
+        encrypted = True
     else:
-        sniff_packets(False, file_upload)
+        encrypted = False
+    sniff_packets()
