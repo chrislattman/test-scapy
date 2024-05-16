@@ -23,6 +23,11 @@ python3 sniffer.py
     - However, Scapy wasn't designed to perform logic on packets while actively capturing them (Python is already slow)
     - You would need to capture an arbitrary amount of packets beforehand, then read them to construct the file that was uploaded
 
+If you want to use `sniffer.c` instead, run `gcc -o sniffer sniffer.c -lpcap && ./sniffer`
+
+- You will need to install `libpcap` (macOS) or `libpcap-dev` (Linux) with a package manager
+- On Linux, replace `./sniffer` with `sudo ./sniffer`
+
 Visit http://127.0.0.1:5000 on a web browser, and enter any login credentials (it doesn't matter what they are). Once you hit "Submit", you will be shown a success page. Check the second terminal and you should see the credentials you just entered.
 
 If you want to see what encrypted data looks like, add `encrypt` as an argument to both python3 commands, and run them again, e.g.
