@@ -25,8 +25,8 @@ python3 sniffer.py
 
 If you want to use `sniffer.c` instead, run `gcc -o sniffer sniffer.c -lpcap && ./sniffer`
 
-- You will need to install `libpcap` (macOS) or `libpcap-dev` (Linux) with a package manager
-- On Linux, replace `./sniffer` with `sudo ./sniffer`
+- On Linux, you will need to install `libpcap-dev` with a package manager and replace `./sniffer` with `sudo -E ./sniffer`
+- On MSYS2, you will need to install `mingw-w64-ucrt-x86_64-libpcap` with `pacman`
 
 Visit http://127.0.0.1:5000 on a web browser, and enter any login credentials (it doesn't matter what they are). Once you hit "Submit", you will be shown a success page. Check the second terminal and you should see the credentials you just entered.
 

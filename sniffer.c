@@ -137,7 +137,7 @@ static void sniff_packets(void)
     bpf_u_int32 net, mask;
     struct bpf_program fp;
     ptrdiff_t username_length, boundary_length, password_length, i, stripped_i;
-    unsigned int index, second_payload_index, size_ethernet, size_ip, size_tcp;
+    unsigned int index, size_ethernet, size_ip, size_tcp;
     unsigned char *payload, *content_type, *second_content_type;
     pcap_dumper_t *dumper;
     struct pcap_pkthdr *header;
@@ -149,6 +149,9 @@ static void sniff_packets(void)
         exit(1);
     }
     for (iface = ifaces; iface != NULL; iface = iface->next) {
+        if (strcmp(iface->name, "any") == 0) {
+            continue;
+        }
         pcap_address = iface->addresses->next;
         if (pcap_address != NULL && pcap_address->addr->sa_family == AF_INET) {
             inet_ntop(AF_INET, &((struct sockaddr_in *) pcap_address->addr)->sin_addr,
@@ -168,11 +171,7 @@ static void sniff_packets(void)
     pcap_freealldevs(ifaces);
 
     if (file_upload) {
-#ifdef __linux__
-        count = 4;
-#else
         count = 2;
-#endif
     } else {
         count = 1;
     }
@@ -228,24 +227,19 @@ static void sniff_packets(void)
             if (memmem(payload, payload_lengths[0],
                     (unsigned char *) "Content-Disposition",
                     strlen("Content-Disposition")) == NULL) {
-#ifdef __linux__
-                second_payload_index = 2;
-#else
-                second_payload_index = 1;
-#endif
-                content_type = memmem(payloads[second_payload_index],
-                    payload_lengths[second_payload_index],
+                content_type = memmem(payloads[1],
+                    payload_lengths[1],
                     (unsigned char *) "Content-Type", strlen("Content-Type"));
                 content_type[0] = '\0';
                 request_str_copy = malloc(payload_lengths[0] + strlen(
-                    (char *) payloads[second_payload_index]) + 1);
+                    (char *) payloads[1]) + 1);
                 if (request_str_copy == NULL) {
                     fprintf(stderr, "malloc: %s\n", strerror(errno));
                     goto cleanup;
                 }
                 memcpy(request_str_copy, payload, payload_lengths[0]);
                 strcpy(request_str_copy + payload_lengths[0],
-                    (char *) payloads[second_payload_index]);
+                    (char *) payloads[1]);
                 request_str = request_str_copy;
             } else {
                 content_type = memmem(payload, payload_lengths[0],
@@ -257,7 +251,6 @@ static void sniff_packets(void)
                 second_content_type[0] = '\0';
                 request_str = (char *) payload;
             }
-            // parse request_str
             boundary_start = strstr(request_str, "Content-Type: multipart/form-data; boundary=");
             boundary_start += strlen("Content-Type: multipart/form-data; boundary=");
             boundary_end = strstr(boundary_start, "\n");
