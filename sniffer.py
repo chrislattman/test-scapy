@@ -91,6 +91,8 @@ def sniff_packets() -> None:
                 first_index += len("Content-Type: multipart/form-data")
                 index = payload[first_index:].index(b"Content-Type")
                 request_str = payload[: first_index + index].decode()
+            # We need to get the boundary because the username and/or password
+            # could have hyphens in them, which would break search()
             (boundary,) = search(
                 "Content-Type: multipart/form-data; boundary={}\n",
                 request_str,
@@ -125,7 +127,7 @@ def sniff_packets() -> None:
             login = parse("username={}&password={}", body, case_sensitive=True)
             print(f"username = {login[0]}")
             print(f"password = {login[1]}")
-            print()
+            print("\n--------------------------------------------------\n")
 
             # Write the packet to a pcap file then read from the file and print
             # the payload
