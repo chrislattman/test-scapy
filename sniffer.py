@@ -6,20 +6,23 @@ import sys
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 from parse import parse, search
-from scapy.all import TCP, Raw, get_working_ifaces, sniff
+from scapy.all import (TCP, Packet, Raw, get_working_ifaces, rdpcap, sniff,
+                       wrpcap)
 
-packets: list[bytes] = []
-decoded_packet: str
+stored_packet: Packet
+payloads: list[bytes] = []
+decoded_payload: str
 encrypted: bool
 file_upload: bool
 
 
-def got_packet(packet) -> None:
-    global packets, decoded_packet
+def got_packet(packet: Packet) -> None:
+    global stored_packet, payloads, decoded_payload
     if encrypted or file_upload:
-        packets.append(packet[Raw].load)
+        payloads.append(packet[Raw].load)
     else:
-        decoded_packet = packet[Raw].load.decode()
+        decoded_payload = packet[Raw].load.decode()
+        stored_packet = packet
 
 
 def sniff_packets() -> None:
@@ -61,12 +64,12 @@ def sniff_packets() -> None:
         # localhost are duplicated, so we end up needing to capture 4 packets,
         # disregarding the 2nd and 4th packets.
         if file_upload:
-            payload = packets[0]
+            payload = payloads[0]
             if b"Content-Disposition" not in payload:
                 if sys.platform == "linux":
-                    second_payload = packets[2]
+                    second_payload = payloads[2]
                 else:
-                    second_payload = packets[1]
+                    second_payload = payloads[1]
 
                 # Following this Content-Type header is 2 newlines followed by
                 # the beginning of the uploaded file. This is where you'd extract
@@ -111,7 +114,7 @@ def sniff_packets() -> None:
             # Since the Content-Type is application/x-www-form-urlencoded, the
             # username and password are in the last line of the HTTP request
             # (the rest is the HTTP request line, headers, and a newline).
-            body = decoded_packet.split("\n")[-1]
+            body = decoded_payload.split("\n")[-1]
 
             # We know that the username and password fields have the HTML input
             # names of "username" and "password", but we could confirm this by
@@ -122,12 +125,19 @@ def sniff_packets() -> None:
             login = parse("username={}&password={}", body, case_sensitive=True)
             print(f"username = {login[0]}")
             print(f"password = {login[1]}")
+            print()
+
+            # Write the packet to a pcap file then read from the file and print
+            # the payload
+            wrpcap("data.pcap", [stored_packet])
+            packets = rdpcap("data.pcap")
+            print(packets[0][Raw].load.decode())
     else:
         # If HTTPS is used, the entire HTTP request is encrypted with TLS, so you
         # will not be able to parse anything.
         #
         # The request (in raw bytes) is printed out for demonstration.
-        print(packets[0].hex())
+        print(payloads[0].hex())
 
 
 if __name__ == "__main__":

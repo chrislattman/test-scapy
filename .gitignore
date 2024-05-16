@@ -162,3 +162,5 @@ cython_debug/
 uploaded_file*
 .vscode/
 sniffer
+*.pcap
+*.pcapng
