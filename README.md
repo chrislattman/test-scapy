@@ -22,6 +22,8 @@ python3 sniffer.py
 - Set the environment variable `FILE_UPLOAD=1` if you want to enable file uploading on the website
     - However, Scapy wasn't designed to perform logic on packets while actively capturing them (Python is already slow)
     - You would need to capture an arbitrary amount of packets beforehand, then read them to construct the file that was uploaded
+- To view the contents of a .pcap file from the command line, use `tcpdump` or `tshark`
+- To view the contents of a .pcap file in a GUI, use Wireshark
 
 If you want to use `sniffer.c` instead, run `gcc -o sniffer sniffer.c -lpcap && ./sniffer`
 
