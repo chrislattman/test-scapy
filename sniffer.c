@@ -16,14 +16,16 @@ struct sniff_loopback_bsd {
     u_int prot; /* Protocol type */
 };
 
-/* Ethernet header (also defined in net/ethernet.h as struct ether_header) */
+/* Ethernet II header (also defined in net/ethernet.h as struct ether_header) */
 struct sniff_ethernet {
     u_char  ether_dhost[ETHER_ADDR_LEN];    /* Destination host address */
     u_char  ether_shost[ETHER_ADDR_LEN];    /* Source host address */
     u_short ether_type;                     /* IP? ARP? RARP? etc */
 };
 
-/* IP header (also defined in netinet/ip.h as struct ip) */
+/* IPv4 header (also defined in netinet/ip.h as struct ip)
+ * (IPv6 header is defined in netinet/ip6.h as struct ip6_hdr)
+ */
 struct sniff_ip {
     u_char  ip_vhl;                 /* version << 4 | header length >> 2 */
     u_char  ip_tos;                 /* type of service */
@@ -42,7 +44,9 @@ struct sniff_ip {
 #define IP_HL(ip)                   (((ip)->ip_vhl) & 0x0f)
 #define IP_V(ip)                    (((ip)->ip_vhl) >> 4)
 
-/* TCP header (also defined in netinet/tcp.h as struct tcphdr) */
+/* TCP header (also defined in netinet/tcp.h as struct tcphdr)
+ * (UDP header is defined in netinet/udp.h as struct udphdr)
+ */
 struct sniff_tcp {
     u_short th_sport;   /* source port */
     u_short th_dport;   /* destination port */
