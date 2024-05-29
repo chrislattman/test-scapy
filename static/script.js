@@ -9,3 +9,8 @@ function testJson() {
     };
     xhr.send(JSON.stringify({x: 5, y: 6}));
 }
+
+function testAlert() {
+    alert("You pressed Test alert.");
+    console.log("You pressed Test alert.");
+}
