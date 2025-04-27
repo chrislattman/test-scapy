@@ -1,9 +1,9 @@
+import hashlib
 import mimetypes
 import os
 import sys
 from time import time
 
-import bcrypt
 import jwt
 import magic
 from flask import Flask, make_response, render_template, request
@@ -14,7 +14,7 @@ app = Flask(__name__)
 
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 
-logins = {}
+logins: dict[str, bytes] = {}
 
 var = os.getenv("FILE_UPLOAD")
 if var is not None and var == "1":
@@ -48,8 +48,8 @@ def index():
 
         if username is not None and password is not None:
             if username not in logins:
-                salt = bcrypt.gensalt()
-                hashed_password = bcrypt.hashpw(password.encode(), salt)
+                salt = os.urandom(16)
+                hashed_password = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 1000000)
                 key = salt + hashed_password
                 logins[username] = key
                 resp = make_response(
@@ -66,9 +66,9 @@ def index():
                 return resp
             else:
                 key = logins[username]
-                salt = key[:29]
-                hashed_password = key[29:]
-                hashed_provided_password = bcrypt.hashpw(password.encode(), salt)
+                salt = key[:16]
+                hashed_password = key[16:]
+                hashed_provided_password = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 1000000)
                 if hashed_password == hashed_provided_password:
                     resp = make_response(
                         render_template("success.html", user=username, existing=" back")
