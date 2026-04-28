@@ -49,6 +49,7 @@ def index():
         if username is not None and password is not None:
             if username not in logins:
                 salt = os.urandom(16)
+                # Could append a pepper (encrypted with TPM/HSM) to encoded password for extra security
                 hashed_password = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 1000000)
                 key = salt + hashed_password
                 logins[username] = key
