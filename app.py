@@ -1,6 +1,7 @@
 import hashlib
 import mimetypes
 import os
+import secrets
 import sys
 from time import time
 
@@ -40,7 +41,9 @@ def index():
         username = request.form.get("username")
         password = request.form.get("password")
         if file_upload:
-            request.files.get("filename").save("uploaded_file")
+            file = request.files.get("filename")
+            if file is not None:
+                file.save("uploaded_file")
             mime = magic.from_file("uploaded_file", mime=True)
             extenstion = mimetypes.guess_extension(mime)
             if extenstion:
@@ -70,7 +73,7 @@ def index():
                 salt = key[:16]
                 hashed_password = key[16:]
                 hashed_provided_password = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 1000000)
-                if hashed_password == hashed_provided_password:
+                if secrets.compare_digest(hashed_password, hashed_provided_password):
                     resp = make_response(
                         render_template("success.html", user=username, existing=" back")
                     )
