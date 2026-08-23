@@ -4,7 +4,7 @@ This is an example of how to extract login credentials from an HTTP POST request
 
 This example also shows how [JWT](https://jwt.io/introduction) works. If a token is sent with a GET request (in the form of a HTTP cookie called "auth_token"), login will be approved without the need for entering a username and password. Click on the "Log out" button to expire the cookie.
 
-Test this by running
+Test this by creating a Python virtual environment and running
 
 ```
 pip3 install -r requirements.txt

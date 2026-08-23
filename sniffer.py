@@ -28,6 +28,7 @@ def got_packet(packet: Packet) -> None:
 def sniff_packets() -> None:
     # This gets the OS-specific name of the loopback interface (localhost)
     ifaces = get_working_ifaces()
+    loopback_iface = None
     for iface in ifaces:
         if iface.ip == "127.0.0.1":
             loopback_iface = iface.name
@@ -55,7 +56,8 @@ def sniff_packets() -> None:
     # and sendp() respectively:
     # https://scapy.readthedocs.io/en/latest/usage.html#sending-packets
     lfilter = lambda p: TCP in p and p[TCP].dport == 5000 and Raw in p
-    sniff(iface=loopback_iface, lfilter=lfilter, prn=got_packet, count=count)
+    if loopback_iface is not None:
+        sniff(iface=loopback_iface, lfilter=lfilter, prn=got_packet, count=count)
 
     if not encrypted:
         # If file uploading is enabled, we want to capture the first 2 packets,
@@ -93,25 +95,31 @@ def sniff_packets() -> None:
                 request_str = payload[: first_index + index].decode()
             # We need to get the boundary because the username and/or password
             # could have hyphens in them, which would break search()
-            (boundary,) = search(
+            res = search(
                 "Content-Type: multipart/form-data; boundary={}\n",
                 request_str,
                 case_sensitive=True,
             )
-            (username,) = search(
-                'Content-Disposition: form-data; name="username"{}--' + boundary,
-                request_str,
-                case_sensitive=True,
-            )
-            (password,) = search(
-                'Content-Disposition: form-data; name="password"{}--' + boundary,
-                request_str,
-                case_sensitive=True,
-            )
-            username = str(username)
-            password = str(password)
-            print(f"username = {username.strip()}")
-            print(f"password = {password.strip()}")
+            if res is not None:
+                (boundary,) = res
+                res = search(
+                    'Content-Disposition: form-data; name="username"{}--' + boundary,
+                    request_str,
+                    case_sensitive=True,
+                )
+                if res is not None:
+                    (username,) = res
+                    res = search(
+                        'Content-Disposition: form-data; name="password"{}--' + boundary,
+                        request_str,
+                        case_sensitive=True,
+                    )
+                    if res is not None:
+                        (password,) = res
+                        username = str(username)
+                        password = str(password)
+                        print(f"username = {username.strip()}")
+                        print(f"password = {password.strip()}")
         else:
             # Since the Content-Type is application/x-www-form-urlencoded, the
             # username and password are in the last line of the HTTP request
@@ -125,8 +133,9 @@ def sniff_packets() -> None:
             # This will not capture Safari form data properly, since it's sent
             # in a second packet.
             login = parse("username={}&password={}", body, case_sensitive=True)
-            print(f"username = {login[0]}")
-            print(f"password = {login[1]}")
+            if login is not None:
+                print(f"username = {login[0]}")
+                print(f"password = {login[1]}")
             print("\n--------------------------------------------------\n")
 
             # Write the packet to a pcap file then read from the file and print
