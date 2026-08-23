@@ -17,7 +17,7 @@ Then in a second terminal, run
 python3 sniffer.py
 ```
 
-- On Linux, you will have to run `sudo -E python3 sniffer.py`
+- On Linux/macOS, you will have to run `sudo -E python3 sniffer.py`
 - Note: `sniffer.py` uses the [Scapy](https://scapy.readthedocs.io/en/latest/usage.html) package, which under the hood uses [libpcap](https://en.wikipedia.org/wiki/Pcap) on Unix-like systems and Npcap on Windows (both libraries share the same API)
 - Set the environment variable `FILE_UPLOAD=1` if you want to enable file uploading on the website
     - However, Scapy wasn't designed to perform logic on packets while actively capturing them (Python is already slow)
@@ -27,7 +27,8 @@ python3 sniffer.py
 
 If you want to use `sniffer.c` instead, run `gcc -o sniffer sniffer.c -lpcap && ./sniffer`
 
-- On Linux, you will need to install `libpcap-dev` with a package manager and replace `./sniffer` with `sudo -E ./sniffer`
+- On Linux/macOS, you will need to install `libpcap-dev` with a package manager and replace `./sniffer` with `sudo -E ./sniffer`
+- On Windows, you need to install Npcap separately, because it installs a kernel driver in addition to the user space library (not needed on Linux or macOS)
 
 Visit http://127.0.0.1:5000 on a web browser, and enter any login credentials (it doesn't matter what they are). Once you hit "Submit", you will be shown a success page. Check the second terminal and you should see the credentials you just entered.
 
@@ -43,7 +44,7 @@ and
 python3 sniffer.py encrypt
 ```
 
-- The Linux note applies here as well
+- The Linux/macOS note applies here as well
 
 If you want to test viewing decrypted HTTPS traffic, install [`mitmproxy`](https://mitmproxy.org/) preferably on some other computer than the device you're testing.
 
