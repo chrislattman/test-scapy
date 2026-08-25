@@ -32,8 +32,8 @@ If you want to use `sniffer.c` instead, run
 ```
 conan profile detect --force
 conan install . --lockfile=conan-<unix|win>.lock --output-folder=build --build=missing -s build_type=Debug
-cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Debug
-cmake --build build
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake [-DCMAKE_BUILD_TYPE=Debug]
+cmake --build build [--config Debug]
 cmake --build build --target run-sniffer
 ```
 
