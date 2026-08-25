@@ -6,8 +6,14 @@ import sys
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 from parse import parse, search
-from scapy.all import (TCP, Packet, Raw, get_working_ifaces, rdpcap, sniff,
+from scapy.all import (Packet, Raw, get_working_ifaces, rdpcap, sniff,
                        wrpcap)
+from scapy.layers.inet import TCP
+
+# # Use libpcap instead of Scapy's own backend
+# if sys.platform == "darwin" or sys.platform == "linux":
+#     from scapy.all import conf
+#     conf.use_pcap = True
 
 stored_packet: Packet
 payloads: list[bytes] = []

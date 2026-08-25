@@ -9,5 +9,6 @@ dependencies = [
     "scapy==2.7.0",
     "parse==1.22.1",
     "PyJWT==2.13.0",
-    "python-magic==0.4.27"
+    "python-magic==0.4.27",
+    "conan==2.31.2"
 ]

@@ -1,0 +1,9 @@
+{
+    "version": "0.5",
+    "requires": [
+        "npcap/1.86#4a7ac587bc394433e36f464b5355f714%1774350884.28"
+    ],
+    "build_requires": [],
+    "python_requires": [],
+    "config_requires": []
+}

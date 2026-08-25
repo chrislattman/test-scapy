@@ -17,18 +17,27 @@ Then in a second terminal, run
 python3 sniffer.py
 ```
 
-- On Linux/macOS, you will have to run `sudo -E python3 sniffer.py`
-- Note: `sniffer.py` uses the [Scapy](https://scapy.readthedocs.io/en/latest/usage.html) package
+- `sniffer.py` uses the [Scapy](https://scapy.readthedocs.io/en/latest/usage.html) package
+- On Linux/macOS, you will have to run `sudo -E python3 sniffer.py` if using default Scapy settings
+    - On Linux/macOS, you have the ability to use the libpcap backend instead of Scapy's own raw sockets backend
+    - On Windows, you are forced to use Npcap
 - Set the environment variable `FILE_UPLOAD=1` if you want to enable file uploading on the website
     - However, Scapy wasn't designed to perform logic on packets while actively capturing them (Python is already slow)
     - You would need to capture an arbitrary amount of packets beforehand, then read them to construct the file that was uploaded
 - To view the contents of a .pcap file from the command line, use `tcpdump` or `tshark`
 - To view the contents of a .pcap file in a GUI, use Wireshark
 
-If you want to use `sniffer.c` instead, run `gcc -o sniffer sniffer.c -lpcap && ./sniffer`
+If you want to use `sniffer.c` instead, run
 
-- On Linux/macOS, you will need to install `libpcap-dev` with a package manager
-- On Windows, you need to install Npcap separately, because it installs a kernel driver in addition to the user space library
+```
+conan profile detect --force
+conan install . --lockfile=conan-<unix|win>.lock --output-folder=build --build=missing -s build_type=Debug
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Debug
+cmake --build build
+cmake --build build --target run-sniffer
+```
+
+- On Windows, you will need to additionally run the [Npcap installer](https://npcap.com/#download) because it installs a kernel driver in addition to the user space DLL
 
 Visit http://127.0.0.1:5000 on a web browser, and enter any login credentials (it doesn't matter what they are). Once you hit "Submit", you will be shown a success page. Check the second terminal and you should see the credentials you just entered.
 
