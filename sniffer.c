@@ -1,4 +1,16 @@
-#define _GNU_SOURCE // needed for memmem
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
+#ifdef _WIN32
+#include <windows.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+
+#pragma comment(lib, "Ws2_32.lib")
+#endif
+
+#define _GNU_SOURCE // needed for memmem on Linux
 #include <ctype.h>
 #include <errno.h>
 #include <stddef.h>
@@ -79,6 +91,20 @@ static unsigned int payloads_count = 0;
 static char *decoded_payload = NULL;
 static int encrypted;
 static int file_upload;
+
+#ifdef _WIN32
+void *memmem(const void *haystack, size_t haystack_len, const void *needle, size_t needle_len) {
+    if (!haystack || !haystack_len || !needle || !needle_len || haystack_len < needle_len)
+        return NULL;
+    
+    for (const char *h = haystack; haystack_len >= needle_len; ++h, --haystack_len) {
+        if (!memcmp(h, needle, needle_len)) {
+            return (void *)h;
+        }
+    }
+    return NULL;
+}
+#endif
 
 static void got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet)
 {
@@ -399,6 +425,13 @@ cleanup:
 
 int main(int argc, char *argv[])
 {
+#ifdef _WIN32
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        printf("WSAStartup failed.\n");
+        return 1;
+    }
+#endif
     char *var = getenv("FILE_UPLOAD");
     if (var != NULL && strcmp(var, "1") == 0) {
         file_upload = 1;
@@ -413,5 +446,8 @@ int main(int argc, char *argv[])
     }
     sniff_packets();
 
+#ifdef _WIN32
+    WSACleanup();
+#endif
     return 0;
 }
