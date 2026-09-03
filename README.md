@@ -55,12 +55,14 @@ python3 sniffer.py encrypt
 
 - The Linux/macOS note applies here as well
 
-If you want to test viewing decrypted HTTPS traffic, install [`mitmproxy`](https://mitmproxy.org/) preferably on some other computer than the device you're testing.
+If you want to test viewing decrypted HTTPS traffic, install [`mitmproxy`](https://mitmproxy.org/) preferably on some other computer than the device you're testing: `pipx install mitmproxy`
 
 - mitmproxy works by routing all HTTP/S (and WebSocket) traffic through a proxy that you control
 - This means any TLS handshake normally done between your device and a website is split up between your device and the mitmproxy server, and the mitmproxy server and the website (hence the mitm- prefix, meaning "man-in-the-middle")
 - It gives you the ability to see decrypted HTTPS traffic in `tcpdump`-like fashion with `mitmdump` or on a webpage with `mitmweb`
 - In order for this to work:
     - You will have to manually configure the HTTP proxy on your device to forward its HTTP/S traffic to the mitmproxy server
-    - You may need to install mitmproxy's valid CA (root) certificate on your device
+        - Alternatively, you could install a WireGuard client on your device and run `mitmweb --mode wireguard` on the other computer, which will generate a QR code that the device can use to configure its end
+        - This approach is more thorough since ALL network traffic from the device is routed through the VPN, including traffic that would bypass the HTTP proxy: think of a mobile app that sends handcrafted HTTP requests using TCP sockets
+    - You will need to install mitmproxy's valid CA (root) certificate on your device
 - While mitmproxy is a handy tool, it's defeated by client certificate pinning, where the server expects a certain certificate from the client (this is rare)
